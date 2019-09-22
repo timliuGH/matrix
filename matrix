@@ -1,0 +1,29 @@
+#!/bin/bash
+temp1="temp1_$$"
+temp2="temp2_$$"
+
+# Get data either from stdin or user-specified file(s)
+# Handle valid command with no file specified i.e. read from stdin
+if [[ ($1 = dims || $1 = transpose || $1 = mean || $1 = add || $1 = multiply)
+    && $# = 1 ]]
+then
+    cat > $temp1
+# Handle dims/transpose/mean with 1 file specified
+elif [[ $# = 2 && ($1 = dims || $1 = transpose || $1 = mean) ]]
+then
+    temp1=$2
+# Handle add/multiply with 2 files specified
+elif [[ $# = 3 && ($1 = add || $1 = multiply) ]]
+then
+    temp1=$2
+    temp2=$3
+# Handle invalid commands
+else
+    echo "Usage:" 1>&2
+    echo -e "\tmatrix dims [MATRIX]" 1>&2
+    echo -e "\tmatrix transpose [MATRIX]" 1>&2
+    echo -e "\tmatrix mean [MATRIX]" 1>&2
+    echo -e "\tmatrix add [MATRIX_LEFT] [MATRIX_RIGHT]" 1>&2
+    echo -e "\tmatrix multiply [MATRIX_LEFT] [MATRIX_RIGHT]" 1>&2
+    exit 1
+fi
