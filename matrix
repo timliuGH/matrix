@@ -41,22 +41,22 @@ fileErr() {
 }
 
 # Hold user's matrices
-temp1="temp1_$$"
-temp2="temp2_$$"
+temp_matrix1="temp_matrix1_$$"
+temp_matrix2="temp_matrix2_$$"
+trap "rm -f $temp_matrix1 $temp_matrix2; echo 'CTRL_C received, exiting'; exit 1" INT HUP TERM
 
 # Get data either from stdin or user-specified file(s)
-# Handle valid command with no file specified i.e. read from stdin
-if [[ ($1 = dims || $1 = transpose || $1 = mean || $1 = add || $1 = multiply)
-    && $# = 1 ]]
+# Handle dims/transpose/mean  with no file specified i.e. read from stdin
+if [[ $# = 1 && ($1 = dims || $1 = transpose || $1 = mean) ]]
 then
-    cat > $temp1
+    cat > $temp_matrix1
 # Handle dims/transpose/mean with 1 file specified
 elif [[ $# = 2 && ($1 = dims || $1 = transpose || $1 = mean) ]]
 then
     # Check file is readable
     if [ -r $2 ]
     then
-        temp1=$2
+        temp_matrix1=$2
     else
         fileErr $2
     fi
@@ -68,8 +68,8 @@ then
     then
         if [ -r $3 ]
         then
-            temp1=$2
-            temp2=$3
+            temp_matrix1=$2
+            temp_matrix2=$3
         else
             fileErr $3
         fi
@@ -82,5 +82,7 @@ fi
 
 if [ $1 = dims ]
 then
-    dims $temp1
+    dims $temp_matrix1
 fi
+
+rm -f temp_matrix1_* temp_matrix2_*
