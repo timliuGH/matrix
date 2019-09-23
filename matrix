@@ -1,4 +1,46 @@
 #!/bin/bash
+
+#--- matrix operations---
+
+dims() {
+    # Input:
+    #   Tab-delimited matrix
+    # Output:
+    #   Number of rows and columns as "ROWS COLS"
+
+    # Count number of rows in matrix
+    numRows=0
+    while read line
+    do
+        numRows=`expr $numRows + 1`
+    done < $1
+
+    # Count number of columns in matrix
+    numCols=0
+    read line < $1
+    for i in $line
+    do
+        numCols=`expr $numCols + 1`
+    done
+    echo "$numRows $numCols"
+}
+
+usageErr() {
+    echo "Usage:" 1>&2
+    echo -e "\tmatrix dims [MATRIX]" 1>&2
+    echo -e "\tmatrix transpose [MATRIX]" 1>&2
+    echo -e "\tmatrix mean [MATRIX]" 1>&2
+    echo -e "\tmatrix add [MATRIX_LEFT] [MATRIX_RIGHT]" 1>&2
+    echo -e "\tmatrix multiply [MATRIX_LEFT] [MATRIX_RIGHT]" 1>&2
+    exit 1
+}
+
+fileErr() {
+    echo "Cannot read file $1" 1>&2
+    exit 1
+}
+
+# Hold user's matrices
 temp1="temp1_$$"
 temp2="temp2_$$"
 
@@ -11,19 +53,34 @@ then
 # Handle dims/transpose/mean with 1 file specified
 elif [[ $# = 2 && ($1 = dims || $1 = transpose || $1 = mean) ]]
 then
-    temp1=$2
+    # Check file is readable
+    if [ -r $2 ]
+    then
+        temp1=$2
+    else
+        fileErr $2
+    fi
 # Handle add/multiply with 2 files specified
 elif [[ $# = 3 && ($1 = add || $1 = multiply) ]]
 then
-    temp1=$2
-    temp2=$3
-# Handle invalid commands
+    # Check files are readable
+    if [ -r $2 ]
+    then
+        if [ -r $3 ]
+        then
+            temp1=$2
+            temp2=$3
+        else
+            fileErr $3
+        fi
+    else
+        fileErr $2
+    fi
 else
-    echo "Usage:" 1>&2
-    echo -e "\tmatrix dims [MATRIX]" 1>&2
-    echo -e "\tmatrix transpose [MATRIX]" 1>&2
-    echo -e "\tmatrix mean [MATRIX]" 1>&2
-    echo -e "\tmatrix add [MATRIX_LEFT] [MATRIX_RIGHT]" 1>&2
-    echo -e "\tmatrix multiply [MATRIX_LEFT] [MATRIX_RIGHT]" 1>&2
-    exit 1
+    usageErr
+fi
+
+if [ $1 = dims ]
+then
+    dims $temp1
 fi
