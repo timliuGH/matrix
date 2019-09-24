@@ -4,12 +4,12 @@
 
 dims() {
     # Input:
-    #   Tab-delimited matrix
+    #   Tab-delimited MxN matrix
     #   Optionally, variable to hold number of rows and 
-    #       variable to hold number of columns
+    #   variable to hold number of columns
     # Output:
     #   If no variables passed in, will output number of rows and 
-    #       columns as "ROWS COLS"
+    #   columns as "ROWS COLS"
 
     # Get optional arguments, if any
     _numRows=$2
@@ -45,9 +45,14 @@ dims() {
 transpose() {
     # Requires dims() function to calculate number of rows and columns
     # Input:
-    #   Tab-delimited matrix
+    #   Tab-delimited MxN matrix
+    #   Optionally, a variable to hold the transposed matrix
     # Output:
-    #   Tab-delimited matrix that is a transposition of input matrix
+    #   Tab-delimited NxM matrix that is a transposition of input matrix
+    #   if optional argument is not supplied
+
+    # Get optional argument if provided
+    _transposed=$2
     
     # Store matrix in an array
     index=0
@@ -63,23 +68,60 @@ transpose() {
     # Get number of rows and columns in matrix
     dims $1 rows cols
 
-    # Print out matrix in transposed order
+    # If optional arg supplied, populate file with transposed matrix
+    # Otherwise, output transposed matrix
     for ((i=0; i<cols; i++))
     do
         for ((j=0; j<rows; j++))
         do
             index=$(( $i + $j*$cols ))
-            echo -n ${array[index]}
+            if [[ "$_transposed" ]]
+            then
+                echo -n ${array[index]} >> "$_transposed"
+            else
+                echo -n ${array[index]}
+            fi
 
             # Add tabs between numbers and newline at end of line
             if (( $j + 1 == $rows ))
             then
-                echo -en "\n"
+                if [[ "$_transposed" ]]
+                then
+                    echo -en "\n" >> "$_transposed"
+                else
+                    echo -en "\n"
+                fi
             else
-                echo -en "\t"
+                if [[ "$_transposed" ]]
+                then
+                    echo -en "\t" >> "$_transposed"
+                else
+                    echo -en "\t"
+                fi
             fi
         done
     done
+}
+
+mean() {
+    # Input:
+    #   Tab-delimited MxN matrix
+    # Output:
+    #   1xN tab-delimited row of elements where the 1st element is the mean 
+    #   of the 1st column, the 2nd the mean of the 2nd column, etc
+
+    # Transpose input matrix so columns become rows
+    transpose $1 tempTransposedMatrix
+
+    while read line
+    do
+        for num in $line
+        do
+
+        done
+    done < tempTransposedMatrix
+
+    rm -f tempTransposedMatrix
 }
 
 usageErr() {
@@ -143,6 +185,9 @@ then
 elif [ $1 = transpose ]
 then
     transpose $temp_matrix1
+elif [ $1 = mean ]
+then
+    mean $temp_matrix1
 fi
 
 rm -f temp_matrix1_* temp_matrix2_*
