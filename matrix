@@ -1,7 +1,6 @@
 #!/bin/bash
 
-#--- matrix operations ---
-
+#--- Matrix Operations ---
 dims() {
     # Description:
     #   Determines the number of rows and columns of a given matrix
@@ -129,7 +128,7 @@ mean() {
 
 add() {
     # Description:
-    #   Adds two matrices together
+    #   Performs matrix addition
     # Requires dims() function to get number of rows and columns of each matrix
     # Input:
     #   Two tab-delimited MxN matrices with same dimensions
@@ -163,9 +162,58 @@ add() {
         done 3<$1 4<$2
     else
         echo -n "Bad input: " 1>&2
-        echo "matrix add operation requires matrices with same dimensions" 1>&2
+        echo "matrix add requires matrices with same dimensions" 1>&2
         exit 1
     fi
+}
+
+multiply() {
+    # Description:
+    #   Performs matrix multiplication
+    # Requires dims() function to get number of rows and columns of each matrix
+    #   and transpose() function to have easier access to columns of values
+    # Input:
+    #   An MxN matrix and an NxP matrix; will verify if matrices are compatible
+    # Output:
+    #   MxP matrix from multiplying the input matrices together
+
+    # Get dimensions of input matrices
+    dims $1 rows1 cols1
+    dims $2 rows2 cols2
+
+    # Check if number of columns in 1st matrix matches number of rows in 2nd
+    if [[ $cols1 == $rows2 ]]; then
+        # Transpose 2nd matrix to have easier access to columns of values
+        transpose $2 tempTransposedMatrix
+        while read line1 <&3; do
+            result=""
+            while read line2 <&4; do
+                # Store values from first matrix into array
+                array=""
+                index=0
+                for i in $line1; do
+                    array[index]=$i
+                    index=$((index + 1))
+                done
+                # Add values from second matrix at corresponding array indices
+                sum=0
+                index=0
+                for j in $line2; do
+                    value=`expr ${array[index]} \* $j`
+                    index=$((index + 1))
+                    sum=$((sum + value))
+                done
+                result="$result""$sum\t"
+            done 4<tempTransposedMatrix
+            echo -e ${result%??}
+        done 3<$1
+    else
+        echo -n "Bad input: " 1>&2
+        echo "matrix multiply requires an MxN matrix and an NxP matrix" 1>&2
+        exit 1
+    fi
+
+    rm -f tempTransposedMatrix
 }
 
 usageErr() {
@@ -225,6 +273,8 @@ elif [ $1 = mean ]; then
     mean $temp_matrix1
 elif [ $1 = add ]; then
     add $temp_matrix1 $temp_matrix2
+elif [ $1 = multiply ]; then
+    multiply $temp_matrix1 $temp_matrix2
 fi
 
 rm -f temp_matrix1_* temp_matrix2_*
