@@ -1,28 +1,85 @@
 #!/bin/bash
 
-#--- matrix operations---
+#--- matrix operations ---
 
 dims() {
     # Input:
     #   Tab-delimited matrix
+    #   Optionally, variable to hold number of rows and 
+    #       variable to hold number of columns
     # Output:
-    #   Number of rows and columns as "ROWS COLS"
+    #   If no variables passed in, will output number of rows and 
+    #       columns as "ROWS COLS"
+
+    # Get optional arguments, if any
+    _numRows=$2
+    _numCols=$3
 
     # Count number of rows in matrix
-    numRows=0
+    local numRows=0
+    # Store last line of matrix to count number of columns later
+    aline=""
     while read line
     do
         numRows=`expr $numRows + 1`
+        aline=$line
     done < $1
 
-    # Count number of columns in matrix
-    numCols=0
-    read line < $1
-    for i in $line
+    # Count number of columns in matrix from previously stored line
+    local numCols=0
+    for i in $aline
     do
         numCols=`expr $numCols + 1`
     done
-    echo "$numRows $numCols"
+
+    # Output "ROWS COLS" if no additional arguments passed to store results
+    if [[ "$_numRows" && "$_numCols" ]]
+    then
+        eval $_numRows="'$numRows'"
+        eval $_numCols="'$numCols'"
+    else
+        echo "$numRows $numCols"
+    fi
+}
+
+transpose() {
+    # Requires dims() function to calculate number of rows and columns
+    # Input:
+    #   Tab-delimited matrix
+    # Output:
+    #   Tab-delimited matrix that is a transposition of input matrix
+    
+    # Store matrix in an array
+    index=0
+    while read line
+    do
+        for i in $line
+        do
+            array[index]=$i
+            index=`expr $index + 1`
+        done
+    done < $1
+
+    # Get number of rows and columns in matrix
+    dims $1 rows cols
+
+    # Print out matrix in transposed order
+    for ((i=0; i<cols; i++))
+    do
+        for ((j=0; j<rows; j++))
+        do
+            index=$(( $i + $j*$cols ))
+            echo -n ${array[index]}
+
+            # Add tabs between numbers and newline at end of line
+            if (( $j + 1 == $rows ))
+            then
+                echo -en "\n"
+            else
+                echo -en "\t"
+            fi
+        done
+    done
 }
 
 usageErr() {
@@ -83,6 +140,9 @@ fi
 if [ $1 = dims ]
 then
     dims $temp_matrix1
+elif [ $1 = transpose ]
+then
+    transpose $temp_matrix1
 fi
 
 rm -f temp_matrix1_* temp_matrix2_*
