@@ -3,6 +3,8 @@
 #--- matrix operations ---
 
 dims() {
+    # Description:
+    #   Determines the number of rows and columns of a given matrix
     # Input:
     #   Tab-delimited MxN matrix
     #   Optionally, variable to hold number of rows and 
@@ -40,6 +42,8 @@ dims() {
 }
 
 transpose() {
+    # Description:
+    #   Converts an MxN matrix into an NxM matrix
     # Requires dims() function to calculate number of rows and columns
     # Input:
     #   Tab-delimited MxN matrix
@@ -84,6 +88,9 @@ transpose() {
 }
 
 mean() {
+    # Description:
+    #   Reduces an MxN matrix into a 1xN matrix where each value is the mean
+    #   of the original column
     # Requires transpose() function to make values in columns more accessible
     # Input:
     #   Tab-delimited MxN matrix
@@ -118,6 +125,47 @@ mean() {
     echo -e ${result%??}
 
     rm -f tempTransposedMatrix
+}
+
+add() {
+    # Description:
+    #   Adds two matrices together
+    # Requires dims() function to get number of rows and columns of each matrix
+    # Input:
+    #   Two tab-delimited MxN matrices with same dimensions
+    # Output:
+    #   MxN matrix where corresponding elements in input matrices are summed
+
+    # Get dimensions of each input matrix
+    dims $1 rows1 cols1
+    dims $2 rows2 cols2
+    # Check if input matrices have same dimensions
+    if [[ ($rows1 -eq $rows2) && ($cols1 -eq $cols2) ]]; then
+        # Read a line of each matrix simultaneously
+        while read line1 <&3 && read line2 <&4; do
+            # Store first value from first matrix
+            array=""
+            index=0
+            for i in $line1; do
+                array[index]=$i
+                index=$(( index + 1 ))
+            done
+            # Add second value from second matrix
+            result=""
+            index=0
+            for j in $line2; do
+                sum=`expr ${array[index]} + $j`
+                index=$(( index + 1 ))
+                result="$result""$sum\t"
+            done
+            # Output sum, stripping of last tab added
+            echo -e ${result%??}
+        done 3<$1 4<$2
+    else
+        echo -n "Bad input: " 1>&2
+        echo "matrix add operation requires matrices with same dimensions" 1>&2
+        exit 1
+    fi
 }
 
 usageErr() {
@@ -175,6 +223,8 @@ elif [ $1 = transpose ]; then
     transpose $temp_matrix1
 elif [ $1 = mean ]; then
     mean $temp_matrix1
+elif [ $1 = add ]; then
+    add $temp_matrix1 $temp_matrix2
 fi
 
 rm -f temp_matrix1_* temp_matrix2_*
