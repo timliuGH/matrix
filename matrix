@@ -104,6 +104,7 @@ transpose() {
 }
 
 mean() {
+    # Requires transpose() function to make values in columns more accessible
     # Input:
     #   Tab-delimited MxN matrix
     # Output:
@@ -113,13 +114,31 @@ mean() {
     # Transpose input matrix so columns become rows
     transpose $1 tempTransposedMatrix
 
+    result=""
     while read line
     do
+        # Find sum of current row (which was column of input matrix)
+        sum=0
+        # Also find number of values in current row
+        nums=0
         for num in $line
         do
-
+            sum=$(( sum + num ))
+            nums=$(( nums + 1 ))
         done
+
+        # Calculate mean rounded to nearest 10; half values round away from 0
+        if [ $sum -gt 0 ]
+        then
+            mean=`expr \( $sum + \( $nums / 2 \) \* \( 1 \) \) / $nums`
+        else
+            mean=`expr \( $sum + \( $nums / 2 \) \* \( -1 \) \) / $nums`
+        fi
+        result="$result""$mean\t"
     done < tempTransposedMatrix
+
+    # Output result, stripping off latest \t added
+    echo -e ${result%??}
 
     rm -f tempTransposedMatrix
 }
