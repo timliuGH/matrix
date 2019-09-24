@@ -68,39 +68,27 @@ transpose() {
     # Get number of rows and columns in matrix
     dims $1 rows cols
 
-    # If optional arg supplied, populate file with transposed matrix
-    # Otherwise, output transposed matrix
+    result=""
+    # Get values of same column from array and store as tab-delimited row
     for ((i=0; i<cols; i++))
     do
         for ((j=0; j<rows; j++))
         do
             index=$(( $i + $j*$cols ))
-            if [[ "$_transposed" ]]
-            then
-                echo -n ${array[index]} >> "$_transposed"
-            else
-                echo -n ${array[index]}
-            fi
-
-            # Add tabs between numbers and newline at end of line
-            if (( $j + 1 == $rows ))
-            then
-                if [[ "$_transposed" ]]
-                then
-                    echo -en "\n" >> "$_transposed"
-                else
-                    echo -en "\n"
-                fi
-            else
-                if [[ "$_transposed" ]]
-                then
-                    echo -en "\t" >> "$_transposed"
-                else
-                    echo -en "\t"
-                fi
-            fi
+            value=${array[index]}
+            result="$result""$value\t"
         done
+        # Replace last tab added with newline
+        result="${result%??}""\n"
     done
+
+    # Save result to optional argument if supplied; otherwise, output result
+    if [[ "$_transposed" ]]
+    then
+        echo -en $result > $_transposed
+    else
+        echo -en $result
+    fi
 }
 
 mean() {
