@@ -1,5 +1,7 @@
 Shell script for matrix manipulation  
 
+Matrix must be tab-delimited  
+
 Available commands:  
 
 $ matrix dims [MATRIX]  
